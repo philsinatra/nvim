@@ -1,0 +1,18 @@
+return {}
+-- return {
+--   "nvim-neo-tree/neo-tree.nvim",
+--   opts = {
+--     window = {
+--       position = "right",
+--     },
+--     filesystem = {
+--       filtered_items = {
+--         visible = false, -- Set to true to show hidden files by default (optional)
+--         hide_dotfiles = false, -- Set to true to hide dotfiles (e.g., .git)
+--         hide_gitignored = true, -- Respect .gitignore (recommended)
+--         hide_by_name = { "node_modules", "dist", "build", "vendor" }, -- Folders to hide
+--         never_show = { ".git" }, -- Always hide these, even if visible = true
+--       },
+--     },
+--   },
+-- }

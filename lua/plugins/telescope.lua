@@ -1,0 +1,57 @@
+-- Use snacks.lua for file explorer
+--
+return {}
+-- return {
+--   "nvim-telescope/telescope.nvim",
+--   opts = function(_, opts)
+--     -- Set file ignore patterns for all pickers including file_browser
+--     opts.defaults = opts.defaults or {}
+--     opts.defaults.file_ignore_patterns = {
+--       "^%.git/",
+--       "^node_modules/",
+--       "^dist/",
+--       "^build/",
+--       "^target/",
+--       "%.lock$",
+--     }
+--
+--     opts.pickers = opts.pickers or {}
+--
+--     -- Configure the file_browser extension (the Explorer you like)
+--     opts.extensions = opts.extensions or {}
+--     opts.extensions.file_browser = opts.extensions.file_browser or {}
+--     opts.extensions.file_browser = {
+--       theme = "ivy",
+--       hijack_netrw = true,
+--       layout_config = {
+--         height = 0.8,
+--         width = 0.8,
+--         prompt_position = "top",
+--       },
+--       -- Apply your ignore patterns to file browser
+--       file_ignore_patterns = {
+--         "^%.git/",
+--         "^node_modules/",
+--         "^dist/",
+--         "^build/",
+--         "^target/",
+--         "%.lock$",
+--       },
+--       hidden = { file_browser = false, folder_browser = false },
+--       respect_gitignore = true,
+--     }
+--
+--     -- Position telescope windows on the right
+--     opts.defaults.layout_strategy = "horizontal"
+--     opts.defaults.layout_config = {
+--       horizontal = {
+--         prompt_position = "top",
+--         preview_width = 0.6,
+--         width = 0.9,
+--         height = 0.8,
+--       },
+--     }
+--
+--     return opts
+--   end,
+-- }
