@@ -19,6 +19,7 @@ return {
         explorer = {
           layout = {
             layout = { position = "right" },
+            auto_hide = { "input" },
           },
           exclude = {
             "node_modules",
