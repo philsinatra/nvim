@@ -14,6 +14,10 @@ return {
         ".git",
         "%.lock$",
       },
+      include = {
+        ".env*",
+        ".htaccess",
+      },
       sources = {
         -- Explorer-specific settings
         explorer = {
@@ -45,6 +49,10 @@ return {
             "vendor/",
             ".git/",
             "%.lock$",
+          },
+          include = {
+            ".env*",
+            ".htaccess",
           },
           hidden = true,
           ignored = false,
