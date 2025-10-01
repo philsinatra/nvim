@@ -8,7 +8,7 @@ return {
     "javascriptreact",
     "typescriptreact",
     "svelte",
-    "php", -- Add PHP support
+    "php",
     "vue",
   },
   config = function()
