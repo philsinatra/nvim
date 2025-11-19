@@ -11,7 +11,11 @@ return {
   {
     "folke/tokyonight.nvim",
     lazy = false,
-    opts = {},
+    opts = {
+      styles = {
+        transparency = true,
+      },
+    },
   },
   {
     "LazyVim/LazyVim",
