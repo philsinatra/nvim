@@ -27,3 +27,5 @@ vim.keymap.set("n", "<leader>co", function()
   vim.cmd("wincmd J")
   vim.cmd("resize 15")
 end, { desc = "Open quickfix at bottom" })
+
+vim.keymap.set("n", "<leader>bo", "<cmd>!open %<cr>", { desc = "Open in browser" })
