@@ -92,6 +92,19 @@ return {
         end
       end
 
+      -- Oxfmt fallback: only if no preferred formatter was detected
+      local oxfmt_fts = {
+        javascript = true, typescript = true, svelte = true, json = true,
+        css = true, html = true,
+      }
+      if #formatters == 0 and oxfmt_fts[ft] then
+        local local_bin = project_root .. "/node_modules/.bin/oxfmt"
+        local bin = vim.fn.executable(local_bin) == 1 and local_bin or "oxfmt"
+        if vim.fn.executable(bin) == 1 then
+          table.insert(formatters, "oxfmt")
+        end
+      end
+
       return formatters
     end
 
@@ -104,6 +117,13 @@ return {
     opts.formatters_by_ft.json = get_formatters_for_ft("json")
     opts.formatters_by_ft.css = get_formatters_for_ft("css")
     opts.formatters_by_ft.html = get_formatters_for_ft("html")
+    opts.formatters_by_ft.javascriptreact = get_formatters_for_ft("javascript")
+    opts.formatters_by_ft.typescriptreact = get_formatters_for_ft("typescript")
+    opts.formatters_by_ft.markdown = (function()
+      local local_bin = vim.fn.getcwd() .. "/node_modules/.bin/oxfmt"
+      local bin = vim.fn.executable(local_bin) == 1 and local_bin or "oxfmt"
+      return vim.fn.executable(bin) == 1 and { "oxfmt" } or {}
+    end)()
 
     -- Extend formatters with your macOS config
     opts.formatters = opts.formatters or {}
@@ -131,6 +151,19 @@ return {
     opts.formatters.biome = {
       command = find_local_bin("biome"),
       args = { "format", "--stdin-file-path", "$FILENAME" },
+      stdin = true,
+    }
+
+    -- Oxfmt formatter
+    opts.formatters.oxfmt = {
+      command = function()
+        local local_bin = vim.fn.getcwd() .. "/node_modules/.bin/oxfmt"
+        if vim.fn.executable(local_bin) == 1 then
+          return local_bin
+        end
+        return "oxfmt"
+      end,
+      args = { "--stdin-filepath", "$FILENAME" },
       stdin = true,
     }
 
