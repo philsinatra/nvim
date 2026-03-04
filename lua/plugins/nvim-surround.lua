@@ -36,10 +36,11 @@ return {
       return tags
     end
 
+    vim.keymap.set("v", "<leader>w", "<Plug>(nvim-surround-visual)", {
+      desc = "Add a surrounding pair around a visual selection",
+    })
+
     require("nvim-surround").setup({
-      keymaps = {
-        visual = "<leader>w",
-      },
       surrounds = {
         ["h"] = { -- Use 'h' for HTML
           add = function()
