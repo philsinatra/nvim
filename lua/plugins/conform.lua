@@ -3,8 +3,9 @@ return {
   opts = function(_, opts)
     -- Helper function to find local binaries (from your macOS config)
     local function find_local_bin(bin_name)
+      local project_root = vim.fn.getcwd() -- Consolidated single declaration
+
       if bin_name == "stylelint" then
-        local project_root = vim.fn.getcwd()
         local node_bin = project_root .. "/node_modules/.bin/" .. bin_name
         if vim.fn.executable(node_bin) == 1 then
           return node_bin
@@ -14,7 +15,6 @@ return {
       if vim.fn.executable(mason_bin) == 1 then
         return mason_bin
       end
-      local project_root = vim.fn.getcwd()
       local vendor_bin = project_root .. "/vendor/bin/" .. bin_name
       if vim.fn.executable(vendor_bin) == 1 then
         return vendor_bin
@@ -82,9 +82,44 @@ return {
         end
       end
 
-      -- CSS/HTML - prefer prettier if available, otherwise stylelint
+      if ft == "php" then
+        local phpcsfixer_bin = find_local_bin("php-cs-fixer")
+        if vim.fn.executable(phpcsfixer_bin) == 1 then
+          table.insert(formatters, "php_cs_fixer")
+        elseif has_prettier_config and vim.fn.executable(find_local_bin("prettier")) == 1 then
+          table.insert(formatters, "prettier") -- Fallback to prettier if configured for PHP
+        end
+      end
+
+      -- CSS/HTML formatting
       if ft == "css" or ft == "html" then
-        if has_prettier_config and vim.fn.executable(find_local_bin("prettier")) == 1 then
+        -- Check for stylelint config
+        local stylelint_configs = {
+          ".stylelintrc",
+          ".stylelintrc.json",
+          ".stylelintrc.yml",
+          ".stylelintrc.yaml",
+          ".stylelintrc.js",
+          ".stylelintrc.cjs",
+          "stylelint.config.js",
+          "stylelint.config.cjs",
+          "stylelint.config.mjs",
+        }
+        local has_stylelint_config = false
+        for _, config in ipairs(stylelint_configs) do
+          if vim.fn.filereadable(project_root .. "/" .. config) == 1 then
+            has_stylelint_config = true
+            break
+          end
+        end
+
+        if ft == "css" and has_stylelint_config then
+          -- When stylelint config exists, use stylelint only for CSS
+          local stylelint_bin = find_local_bin("stylelint")
+          if vim.fn.executable(stylelint_bin) == 1 then
+            table.insert(formatters, "stylelint")
+          end
+        elseif has_prettier_config and vim.fn.executable(find_local_bin("prettier")) == 1 then
           if ft == "css" then
             table.insert(formatters, "stylelint") -- CSS can use both
           end
@@ -92,10 +127,13 @@ return {
         end
       end
 
-      -- Oxfmt fallback: only if no preferred formatter was detected
       local oxfmt_fts = {
-        javascript = true, typescript = true, svelte = true, json = true,
-        css = true, html = true,
+        javascript = true,
+        typescript = true,
+        svelte = true,
+        json = true,
+        css = true,
+        html = true,
       }
       if #formatters == 0 and oxfmt_fts[ft] then
         local local_bin = project_root .. "/node_modules/.bin/oxfmt"
@@ -108,15 +146,32 @@ return {
       return formatters
     end
 
-    -- Extend formatters_by_ft dynamically
+    -- Extend formatters_by_ft dynamically as functions (re-evaluate on each format)
     opts.formatters_by_ft = opts.formatters_by_ft or {}
-    opts.formatters_by_ft.javascript = get_formatters_for_ft("javascript")
-    opts.formatters_by_ft.typescript = get_formatters_for_ft("typescript")
-    opts.formatters_by_ft.svelte = get_formatters_for_ft("svelte")
-    opts.formatters_by_ft.svx = get_formatters_for_ft("svelte")
-    opts.formatters_by_ft.json = get_formatters_for_ft("json")
-    opts.formatters_by_ft.css = get_formatters_for_ft("css")
-    opts.formatters_by_ft.html = get_formatters_for_ft("html")
+    opts.formatters_by_ft.javascript = function()
+      return get_formatters_for_ft("javascript")
+    end
+    opts.formatters_by_ft.typescript = function()
+      return get_formatters_for_ft("typescript")
+    end
+    opts.formatters_by_ft.svelte = function()
+      return get_formatters_for_ft("svelte")
+    end
+    opts.formatters_by_ft.svx = function()
+      return get_formatters_for_ft("svelte")
+    end
+    opts.formatters_by_ft.json = function()
+      return get_formatters_for_ft("json")
+    end
+    opts.formatters_by_ft.css = function()
+      return get_formatters_for_ft("css")
+    end
+    opts.formatters_by_ft.html = function()
+      return get_formatters_for_ft("html")
+    end
+    opts.formatters_by_ft.php = function()
+      return get_formatters_for_ft("php")
+    end
     opts.formatters_by_ft.javascriptreact = get_formatters_for_ft("javascript")
     opts.formatters_by_ft.typescriptreact = get_formatters_for_ft("typescript")
     opts.formatters_by_ft.markdown = (function()
@@ -154,6 +209,35 @@ return {
       stdin = true,
     }
 
+    -- PHP CS Fixer formatter (fixed to work with file-based formatting)
+    opts.formatters.php_cs_fixer = {
+      command = find_local_bin("php-cs-fixer"),
+      args = function(self, ctx)
+        local args = {
+          "fix",
+          "$FILENAME",
+          "--quiet",
+          "--no-interaction",
+          "--allow-risky=yes",
+          "--using-cache=no",
+        }
+
+        -- Check for config files with multiple possible names
+        local project_root = vim.fn.getcwd()
+        local config_files = { ".php-cs-fixer.php", "_php-cs-fixer.php", ".php-cs-fixer.dist.php" }
+        for _, config_file in ipairs(config_files) do
+          local config_path = project_root .. "/" .. config_file
+          if vim.fn.filereadable(config_path) == 1 then
+            table.insert(args, "--config=" .. config_path)
+            break
+          end
+        end
+
+        return args
+      end,
+      stdin = false, -- PHP CS Fixer works better with files
+    }
+
     -- Oxfmt formatter
     opts.formatters.oxfmt = {
       command = function()
@@ -168,16 +252,15 @@ return {
     }
 
     -- Add stylelint config if found (from macOS)
-    local config_path = vim.fn.findfile(".stylelintrc.json", vim.fn.getcwd() .. ";")
-    if config_path ~= "" and vim.fn.filereadable(config_path) == 1 then
+    local stylelint_config_path = vim.fn.findfile(".stylelintrc.json", vim.fn.getcwd() .. ";")
+    if stylelint_config_path ~= "" and vim.fn.filereadable(stylelint_config_path) == 1 then
       table.insert(opts.formatters.stylelint.args, 1, "--config")
-      table.insert(opts.formatters.stylelint.args, 2, config_path)
+      table.insert(opts.formatters.stylelint.args, 2, stylelint_config_path)
     end
 
-    -- Ensure format_on_save is enabled
-    -- Commented out because LazyVim handles formatting on save directly
-    -- opts.format_on_save = opts.format_on_save or {
-    --   timeout_ms = 500,
+    -- Enable format on save for Omarchy
+    -- opts.format_on_save = {
+    --   timeout_ms = 2000,
     --   lsp_fallback = true,
     -- }
 
