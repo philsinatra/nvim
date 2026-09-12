@@ -10,17 +10,20 @@ return {
         if vim.fn.executable(node_bin) == 1 then
           return node_bin
         end
-        if bin_name == "oxlint" then
-          -- Check for global oxlint first
-          if vim.fn.executable("oxlint") == 1 then
-            return "oxlint"
-          end
-          -- Then check local node_modules
-          local project_root = vim.fn.getcwd()
-          local node_bin = project_root .. "/node_modules/.bin/" .. bin_name
-          if vim.fn.executable(node_bin) == 1 then
-            return node_bin
-          end
+      end
+      if bin_name == "oxlint" then
+        -- Dead branch: oxlint has no stdin mode, so it is never registered with
+        -- nvim-lint (see the notes further down this file). Kept in sync with
+        -- oxlint.lua's resolution order so it does not mislead if that changes.
+        -- Project-local first: a repo's .oxlintrc.json is only valid for the
+        -- oxlint version that repo pins.
+        local project_root = vim.fn.getcwd()
+        local node_bin = project_root .. "/node_modules/.bin/" .. bin_name
+        if vim.fn.executable(node_bin) == 1 then
+          return node_bin
+        end
+        if vim.fn.executable("oxlint") == 1 then
+          return "oxlint"
         end
       end
       local mason_bin = vim.fn.stdpath("data") .. "/mason/bin/" .. bin_name
@@ -39,20 +42,32 @@ return {
       return bin_name
     end
 
+    -- A project opts into biome by committing a biome config (mirrors conform.lua)
+    local function has_biome_config()
+      local project_root = vim.fn.getcwd()
+      for _, config in ipairs({ "biome.json", "biome.jsonc" }) do
+        if vim.fn.filereadable(project_root .. "/" .. config) == 1 then
+          return true
+        end
+      end
+      return false
+    end
+
     -- Dynamically determine linters based on available binaries (adapted from macOS)
     local function get_linters_for_ft(ft)
       local linters = {}
       local eslint_bin = find_local_bin("eslint")
       local biome_bin = find_local_bin("biome")
-      local oxlint_bin = find_local_bin("oxlint")
       if ft == "javascript" or ft == "typescript" or ft == "svelte" then
         if vim.fn.executable(eslint_bin) == 1 then
           table.insert(linters, "eslint_d")
-        elseif vim.fn.executable(biome_bin) == 1 then
+        elseif has_biome_config() and vim.fn.executable(biome_bin) == 1 then
+          -- Only lint with biome when the project actually configures it (matches conform.lua).
+          -- biome is installed unconditionally by mason, so its presence alone means nothing.
           table.insert(linters, "biome")
-        elseif vim.fn.executable(oxlint_bin) == 1 then
-          table.insert(linters, "oxlint")
         end
+        -- oxlint is intentionally absent: it has no stdin mode, so it cannot run through
+        -- nvim-lint. Oxlint diagnostics come from the oxc language server (see oxlint.lua).
       end
       if ft == "php" then
         local phpcs_bin = find_local_bin("phpcs")
@@ -264,5 +279,8 @@ return {
         end
       end,
     })
+
+    -- No oxlint linter here: oxlint has no --stdin support, so nvim-lint cannot feed it a
+    -- buffer. Oxlint runs as a language server instead (lua/plugins/oxlint.lua).
   end,
 }
