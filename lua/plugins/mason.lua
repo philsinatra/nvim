@@ -1,47 +1,27 @@
 return {
   "mason-org/mason.nvim",
-  dependencies = {
-    "mason-org/mason-lspconfig.nvim",
-    "WhoIsSethDaniel/mason-tool-installer.nvim",
+  opts = {
+    ensure_installed = {
+      "biome",
+      "css-lsp",
+      "emmet-language-server",
+      "eslint-lsp",
+      "eslint_d",
+      "html-lsp",
+      "htmlhint",
+      "intelephense",
+      "lua-language-server",
+      "php-cs-fixer",
+      "phpcs",
+      "phpstan",
+      "prettier",
+      "shfmt",
+      "stylelint",
+      "stylua",
+      "svelte-language-server",
+      "tree-sitter-cli",
+      "typescript-language-server",
+      -- Note: oxlint should be installed separately via npm: npm install -g oxlint
+    },
   },
-  config = function()
-    require("mason").setup()
-
-    require("mason-lspconfig").setup({
-      ensure_installed = {
-        "cssls",
-        "html",
-        "svelte",
-        "ts_ls",
-        "eslint",
-        "emmet_ls",
-        "intelephense",
-      },
-      automatic_installation = true,
-    })
-
-    require("mason-tool-installer").setup({
-      ensure_installed = {
-        -- LSPs
-        "ts_ls",
-        "svelte",
-        "emmet_ls",
-        "eslint",
-        "cssls",
-        "html",
-        "intelephense",
-        -- Linters
-        "eslint_d",
-        "stylelint",
-        "htmlhint",
-        "phpcs",
-        "phpstan",
-        -- Formatters
-        "prettier",
-        "biome",
-        "php-cs-fixer",
-      },
-      auto_update = true,
-    })
-  end,
 }

@@ -6,26 +6,20 @@ vim.keymap.set("n", "<leader>m", function()
   vim.cmd("copen")
 end, { desc = "List diagnostics in quickfix" })
 
--- Nuclear option: close ALL extra windows after grep
-vim.api.nvim_create_autocmd("QuickfixCmdPost", {
-  pattern = "*",
-  callback = function()
-    -- Close all quickfix and location windows
-    for _, win in pairs(vim.api.nvim_list_wins()) do
-      local buf = vim.api.nvim_win_get_buf(win)
-      local filetype = vim.api.nvim_buf_get_option(buf, "filetype")
-      if filetype == "qf" then
-        vim.api.nvim_win_close(win, false)
-      end
-    end
-  end,
-})
+-- convert a. b. c. lists to dashed lists in markdown
+vim.keymap.set(
+  "x",
+  "<leader>dl",
+  [[:s/^\s*[a-z]\.\s*/- /<CR>]],
+  { desc = "Convert lettered list to dash list (selection only)" }
+)
 
--- Your manual opener
 vim.keymap.set("n", "<leader>co", function()
   vim.cmd("copen")
   vim.cmd("wincmd J")
   vim.cmd("resize 15")
 end, { desc = "Open quickfix at bottom" })
 
-vim.keymap.set("n", "<leader>bo", "<cmd>!open %<cr>", { desc = "Open in browser" })
+vim.keymap.set("n", "<leader>bo", function()
+  vim.ui.open(vim.fn.expand("%:p"))
+end, { desc = "Open in browser" })

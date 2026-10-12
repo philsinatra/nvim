@@ -13,6 +13,8 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
   end
 end
 vim.opt.rtp:prepend(lazypath)
+
+-- pjs
 vim.filetype.add({
   extension = {
     svx = "svelte",
@@ -25,6 +27,24 @@ require("lazy").setup({
     { "LazyVim/LazyVim", import = "lazyvim.plugins" },
     -- import/override with your plugins
     { import = "plugins" },
+    {
+      "neovim/nvim-lspconfig",
+      opts = {
+        servers = {
+          biome = {
+            filetypes = {
+              "css",
+              "javascript",
+              "javascriptreact",
+              "typescript",
+              "typescriptreact",
+              "json",
+              "jsonc",
+            },
+          },
+        },
+      },
+    },
   },
   defaults = {
     -- By default, only LazyVim plugins will be lazy-loaded. Your custom plugins will load during startup.
